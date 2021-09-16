@@ -1,9 +1,10 @@
-
+import psycopg2
 import re
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 import numpy as np
+import sqlalchemy
 
 def striphtml(data):
     p = re.compile(r'<.*?>')
@@ -58,14 +59,6 @@ def crawlData():
     for i in range(0, len(movieName)):
         movieName[i] = stripWhitespace(movieName[i])
 
-    ID = []
-
-    for i in range(1, len(movieData)+1):
-        if i<10:
-            ID.append("1000" + str(i))
-        else:
-            ID.append("100" + str(i))
-
     viewType = []
     viewStatus = []
 
@@ -73,7 +66,28 @@ def crawlData():
         viewType.append("Digital")
         viewStatus.append("Now Showing")
 
-    movieDF = pd.DataFrame(np.column_stack([ID, movieName, castList, duration, releaseDate, classification, viewType, viewStatus]), 
-                                columns = ['ID', 'Name', 'Casts', 'Runtime', 'ReleaseDate', 'Classification', 'ViewType', 'ViewStatus'])
+    movieDF = pd.DataFrame(np.column_stack([movieName, castList, duration, releaseDate, classification, viewType, viewStatus]), 
+                                columns = ['Name', 'Casts', 'Runtime', 'ReleaseDate', 'Classification', 'ViewType', 'ViewStatus'])
 
     return movieDF
+
+def getData(command, url):    
+    conn = psycopg2.connect(url, sslmode='require')
+    
+    try:
+        df = pd.read_sql(command, conn)
+        if conn is not None:
+            conn.close()
+        
+        return df
+        
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+        
+def insertIntoDB():
+    data = crawlData()
+    url = 'postgresql://thwhoypafnogzl:a3f953c6eb51f1628ebd58f105128a2b13d9e7d3aa51dc756aca12dcb55a1611@ec2-3-224-7-166.compute-1.amazonaws.com:5432/d8dc5r528m6g32'
+    engine = sqlalchemy.create_engine(url)
+    data.to_sql(name='movie', con=engine, if_exists='replace')
+    
+    print("Done")
