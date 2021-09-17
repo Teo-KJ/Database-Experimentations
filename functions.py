@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import numpy as np
 import sqlalchemy
+from datetime import datetime
 
 def striphtml(data):
     p = re.compile(r'<.*?>')
@@ -61,13 +62,15 @@ def crawlData():
 
     viewType = []
     viewStatus = []
+    time = []
 
     for i in range(0, len(movieName)):
         viewType.append("Digital")
         viewStatus.append("Now Showing")
+        time.append(datetime.now())
 
-    movieDF = pd.DataFrame(np.column_stack([movieName, castList, duration, releaseDate, classification, viewType, viewStatus]), 
-                                columns = ['Name', 'Casts', 'Runtime', 'ReleaseDate', 'Classification', 'ViewType', 'ViewStatus'])
+    movieDF = pd.DataFrame(np.column_stack([movieName, castList, duration, releaseDate, classification, viewType, viewStatus, time]), 
+                                columns = ['Name', 'Casts', 'Runtime', 'ReleaseDate', 'Classification', 'ViewType', 'ViewStatus', 'IngestionTime'])
 
     return movieDF
 
@@ -86,7 +89,7 @@ def getData(command, url):
         
 def insertIntoDB():
     data = crawlData()
-    url = 'postgresql://thwhoypafnogzl:a3f953c6eb51f1628ebd58f105128a2b13d9e7d3aa51dc756aca12dcb55a1611@ec2-3-224-7-166.compute-1.amazonaws.com:5432/d8dc5r528m6g32'
+    url = ''
     engine = sqlalchemy.create_engine(url)
     data.to_sql(name='movie', con=engine, if_exists='replace')
     
