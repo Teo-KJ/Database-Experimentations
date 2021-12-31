@@ -1,5 +1,7 @@
 # Database-Experimentations
-Trying out on database and scheduling tools.
+Trying out on database and scheduling tools
+
+By Teo KJ
 
 ## About the Project
 This project is conducted to try out on various tools to automate data collection and storing the data into structured databases. 
